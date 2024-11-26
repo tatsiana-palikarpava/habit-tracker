@@ -6,9 +6,11 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  Req,
 } from '@nestjs/common';
-import { HabitsService } from './habits.service';
-import { CreateHabitDto, UpdateHabitDto } from './dto';
+import { HabitsService } from '../services/habits.service';
+import { CreateHabitDto, GetAllHabitsQueryDto, UpdateHabitDto } from '../dto';
 import { UUID } from 'crypto';
 
 @Controller('habits')
@@ -20,8 +22,8 @@ export class HabitsController {
     return this.habitsService.create(createHabitDto);
   }
 
-  @Get()
-  findAll() {
+  @Get('all')
+  findAll(@Query() query: GetAllHabitsQueryDto) {
     return this.habitsService.findAll();
   }
 
