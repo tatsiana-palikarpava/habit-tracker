@@ -1,23 +1,16 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateHabitDto, UpdateHabitDto } from '../dto';
 import { randomUUID, UUID } from 'crypto';
 import { Habit } from '../entities/habit.entity';
-import { HabitsValidationService } from './habits-validation.service';
-import { DBConnection } from '../connections/db.connection';
-import { IHabitsValidationService } from './habits-validation.interface';
-// import { DBConnection } from '../connections/db.connection';
-
 @Injectable()
 export class HabitsService {
-  constructor() {} // @Inject('CONNECTION') private readonly connection: DBConnection, //@Inject('VALIDATION') private readonly validationService: IHabitsValidationService, // private readonly validationService: HabitsValidationService, // @Inject(forwardRef(() => HabitsValidationService))
+  constructor() {}
 
   private habits: Habit[] = [];
 
   create(createHabitDto: CreateHabitDto): Habit {
     const id = randomUUID();
     this.habits.push({ id, ...createHabitDto });
-    // this.validationService.validate();
-    // this.connection.ping()
     return this.findOne(id);
   }
 
