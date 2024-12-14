@@ -1,23 +1,29 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { CreateHabitDto, UpdateHabitDto } from '../dto';
 import { randomUUID, UUID } from 'crypto';
 import { Habit } from '../entities/habit.entity';
-import { HabitsValidationService } from './habits-validation.service';
-import { DBConnection } from '../connections/db.connection';
-import { IHabitsValidationService } from './habits-validation.interface';
-// import { DBConnection } from '../connections/db.connection';
-
+import { CustomForbiddenException } from '@libs/utils';
 @Injectable()
 export class HabitsService {
-  constructor() {} // @Inject('CONNECTION') private readonly connection: DBConnection, //@Inject('VALIDATION') private readonly validationService: IHabitsValidationService, // private readonly validationService: HabitsValidationService, // @Inject(forwardRef(() => HabitsValidationService))
+  constructor() {}
 
   private habits: Habit[] = [];
 
   create(createHabitDto: CreateHabitDto): Habit {
     const id = randomUUID();
     this.habits.push({ id, ...createHabitDto });
-    // this.validationService.validate();
-    // this.connection.ping()
+    // unhandled error
+    // console.log((createHabitDto as any).id.toString());
+
+    // throw new HttpException('hello', HttpStatus.FORBIDDEN);
+    // throw new ForbiddenException('hello');
+    // throw new CustomForbiddenException('user');
+
     return this.findOne(id);
   }
 
