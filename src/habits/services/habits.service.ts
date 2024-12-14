@@ -1,7 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { CreateHabitDto, UpdateHabitDto } from '../dto';
 import { randomUUID, UUID } from 'crypto';
 import { Habit } from '../entities/habit.entity';
+import { CustomForbiddenException } from '@libs/utils';
 @Injectable()
 export class HabitsService {
   constructor() {}
@@ -11,6 +17,13 @@ export class HabitsService {
   create(createHabitDto: CreateHabitDto): Habit {
     const id = randomUUID();
     this.habits.push({ id, ...createHabitDto });
+    // unhandled error
+    // console.log((createHabitDto as any).id.toString());
+
+    // throw new HttpException('hello', HttpStatus.FORBIDDEN);
+    // throw new ForbiddenException('hello');
+    // throw new CustomForbiddenException('user');
+
     return this.findOne(id);
   }
 
