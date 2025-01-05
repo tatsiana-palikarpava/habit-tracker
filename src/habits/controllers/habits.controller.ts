@@ -6,74 +6,47 @@ import {
   Patch,
   Param,
   Delete,
-  UseFilters,
-  UseGuards,
-  SetMetadata,
-  ParseUUIDPipe,
-  HttpStatus,
-  UsePipes,
   UseInterceptors,
   ClassSerializerInterceptor,
-  HttpException,
+  ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { HabitsService } from '../services/habits.service';
-import { CreateHabitDto, UpdateHabitDto } from '../dto';
-import { UUID } from 'crypto';
-import { HttpExceptionFilter, Origin } from '@libs/utils';
-import { OriginGuard } from '@libs/utils';
-import { ToUpperCasePipe } from '@libs/utils/pipes/to-upper-case.pipe';
-import { ZodValidationPipe } from '@libs/utils/pipes/zod-validation.pipe';
-import { createHabitSchema } from '../schemas';
-import { LoggingInterceptor } from '@libs/utils';
-import { ALLOWED_ORIGINS } from '../constants';
-import { CreateHabitResponseDto } from '../dto/create-habit-response.dto';
-import { plainToInstance } from 'class-transformer';
+import { CreateHabitDto, GetAllHabitsQueryDto, UpdateHabitDto } from '../dto';
 
 @Controller('habits')
 export class HabitsController {
   constructor(private readonly habitsService: HabitsService) {}
 
   @Post()
-  @UseInterceptors(LoggingInterceptor)
   @UseInterceptors(ClassSerializerInterceptor)
-  // @UsePipes(new ZodValidationPipe(createHabitSchema))
-  create(
-    @Body(new ToUpperCasePipe('title')) createHabitDto: CreateHabitDto,
-  ): CreateHabitResponseDto {
-    return new CreateHabitResponseDto(
-      this.habitsService.create(createHabitDto),
-    );
+  create(@Body() body: CreateHabitDto) {
+    return this.habitsService.create(body);
+  }
+
+  @Post(':id/complete')
+  @UseInterceptors(ClassSerializerInterceptor)
+  trackHabitCompletion(@Param('id', ParseIntPipe) id: number) {
+    return this.habitsService.trackHabitCompletion(id);
   }
 
   @Get('all')
-  @UseFilters(new HttpExceptionFilter())
-  // @SetMetadata('origins', ALLOWED_ORIGINS)
-  @UseGuards(OriginGuard)
-  @Origin(ALLOWED_ORIGINS)
-  findAll() {
-    return this.habitsService.findAll();
+  findAll(@Query() query: GetAllHabitsQueryDto) {
+    return this.habitsService.findAll(query);
   }
 
   @Get(':id')
-  findOne(
-    @Param(
-      'id',
-      new ParseUUIDPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
-    id: UUID,
-  ) {
-    return this.habitsService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.habitsService.findOneOrFail(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: UUID, @Body() updateHabitDto: UpdateHabitDto) {
-    return this.habitsService.update(id, updateHabitDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateHabitDto) {
+    return this.habitsService.update(id, body);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: UUID) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.habitsService.remove(id);
   }
 }

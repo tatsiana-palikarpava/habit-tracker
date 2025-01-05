@@ -1,1 +1,4 @@
-export const ALLOWED_ORIGINS = ['localhost'];
+export const HABIT_ERRORS = {
+  HABIT_NOT_FOUND: 'HABIT_NOT_FOUND',
+  ALREADY_COMPLETED: 'ALREADY_COMPLETED',
+};

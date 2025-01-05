@@ -1,5 +1,3 @@
-import { OmitType } from '@nestjs/mapped-types';
-import { Habit } from '../entities/habit.entity';
 import {
   IsDateString,
   IsNumber,
@@ -18,7 +16,7 @@ export class CreateHabitDto {
   @IsOptional()
   @MaxLength(500)
   @ApiPropertyOptional({ type: String })
-  public description: string;
+  public description?: string;
 
   @IsNumber()
   @ApiProperty({ type: Number })

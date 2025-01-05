@@ -25,5 +25,8 @@
         "libs/utils/src/*"
       ]
     }
+  },
+   "ts-node": {
+    "files": true
   }
 }

@@ -1,66 +1,85 @@
 import {
-  ForbiddenException,
-  HttpException,
-  HttpStatus,
+  BadRequestException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import { CreateHabitDto, UpdateHabitDto } from '../dto';
-import { randomUUID, UUID } from 'crypto';
+import { CreateHabitDto, GetAllHabitsQueryDto, UpdateHabitDto } from '../dto';
 import { Habit } from '../entities/habit.entity';
-import { CustomForbiddenException } from '@libs/utils';
+import { InjectRepository } from '@nestjs/typeorm';
+import { HABIT_ERRORS } from '../constants';
+import { HabitsRepository } from '../repositories/habits.repository';
+import { DataSource, EntityManager, Repository } from 'typeorm';
+import { HabitCompletion } from '../entities/habit-completion.entity';
+import * as moment from 'moment';
+
 @Injectable()
 export class HabitsService {
-  constructor() {}
+  constructor(
+    // @InjectRepository(Habit) private habitsRepository: Repository<Habit>,
+    private habitsRepository: HabitsRepository,
+    private dataSource: DataSource,
+    @InjectRepository(HabitCompletion)
+    private habitCompletionsRepository: Repository<HabitCompletion>,
+  ) {}
 
-  private habits: Habit[] = [];
-
-  create(createHabitDto: CreateHabitDto): Habit {
-    const id = randomUUID();
-    this.habits.push({ id, ...createHabitDto });
-    // unhandled error
-    // console.log((createHabitDto as any).id.toString());
-
-    // throw new HttpException('hello', HttpStatus.FORBIDDEN);
-    // throw new ForbiddenException('hello');
-    // throw new CustomForbiddenException('user');
-
-    return this.findOne(id);
+  async create(createHabitDto: CreateHabitDto): Promise<Habit> {
+    const habitInstance = this.habitsRepository.create(createHabitDto);
+    const habit = await this.habitsRepository.save(habitInstance);
+    return habit;
   }
 
-  findAll(): Habit[] {
-    return this.habits;
+  async trackHabitCompletion(id: number): Promise<void> {
+    const habit = await this.findOneOrFail(id);
+    const latestHabitCompletion = await this.habitCompletionsRepository.findOne(
+      {
+        where: { habitId: id },
+        order: { createdAt: 'desc' },
+      },
+    );
+    if (latestHabitCompletion) {
+      if (
+        moment().diff(moment(latestHabitCompletion.createdAt), 'minutes') <
+        habit.frequency
+      ) {
+        throw new BadRequestException(HABIT_ERRORS.ALREADY_COMPLETED);
+      }
+    }
+    // await this.habitCompletionsRepository.save({ habitId: id });
+    // await this.habitsRepository.update({ id }, { completionsCount: habit.completionsCount + 1 });
+    await this.habitsRepository.manager.transaction(
+      async (entityManager: EntityManager) => {
+        const habitCompletionsRepository =
+          entityManager.getRepository(HabitCompletion);
+        const habitsRepository = entityManager.getRepository(Habit);
+        await habitCompletionsRepository.save({ habitId: id });
+        await habitsRepository.update(
+          { id },
+          { completionsCount: habit.completionsCount + 1 },
+        );
+      },
+    );
   }
 
-  findOne(id: UUID): Habit | null {
-    const habit = this.habits.find((h) => h.id === id);
+  async findAll(options: GetAllHabitsQueryDto): Promise<[Habit[], number]> {
+    return this.habitsRepository.findByOptionsQB(options);
+  }
+
+  async findOneOrFail(id: number): Promise<Habit> {
+    const habit = await this.habitsRepository.findOneBy({ id });
     if (!habit) {
-      console.error(`Habit ${id} not found`);
-      return;
+      throw new NotFoundException(HABIT_ERRORS.HABIT_NOT_FOUND);
     }
-    return habit || null;
+    return habit;
   }
 
-  findOneIndex(id: UUID): number | null {
-    const habitIndex = this.habits.findIndex((h) => h.id === id);
-    return habitIndex === -1 ? null : habitIndex;
+  async update(id: number, updateHabitDto: UpdateHabitDto): Promise<Habit> {
+    await this.findOneOrFail(id);
+    await this.habitsRepository.update({ id }, updateHabitDto);
+    return this.habitsRepository.findOneBy({ id });
   }
 
-  update(id: UUID, updateHabitDto: UpdateHabitDto): Habit | null {
-    const habitIndex = this.findOneIndex(id);
-    if (!habitIndex) {
-      console.error(`Habit ${id} not found`);
-      return;
-    }
-    this.habits[habitIndex] = { ...this.habits[habitIndex], ...updateHabitDto };
-    return this.findOne(id);
-  }
-
-  remove(id: UUID): void {
-    const habitIndex = this.findOneIndex(id);
-    if (!habitIndex) {
-      console.error(`Habit ${id} not found`);
-      return;
-    }
-    this.habits.splice(habitIndex, 1);
+  async remove(id: number): Promise<void> {
+    await this.findOneOrFail(id);
+    this.habitsRepository.delete({ id });
   }
 }
