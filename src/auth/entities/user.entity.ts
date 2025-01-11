@@ -28,6 +28,6 @@ export class User {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  // @OneToMany(() => Habit, (habit) => habit.user)
-  // habits: Habit[];
+  @OneToMany(() => Habit, (habit) => habit.user)
+  habits: Habit[];
 }

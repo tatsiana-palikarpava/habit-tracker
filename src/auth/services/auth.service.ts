@@ -11,7 +11,6 @@ import { compare, hash } from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { SignInDto, SignUpDto } from '../dto/auth.controller.dto';
 import { JwtService } from '@nestjs/jwt';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class AuthService {

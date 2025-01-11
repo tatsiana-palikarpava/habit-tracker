@@ -1,10 +1,5 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  NestInterceptor,
-  UnprocessableEntityException,
-} from '@nestjs/common';
-import { catchError, map, Observable, tap, throwError } from 'rxjs';
+import { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
+import { Observable, tap } from 'rxjs';
 
 export class LoggingInterceptor implements NestInterceptor {
   intercept(
