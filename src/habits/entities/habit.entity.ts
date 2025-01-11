@@ -5,8 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import { HabitCompletion } from './habit-completion.entity';
+import { User } from '../../auth/entities/user.entity';
 
 @Entity()
 export class Habit {
@@ -36,4 +38,7 @@ export class Habit {
 
   @OneToMany(() => HabitCompletion, (habitCompletion) => habitCompletion.habit)
   habitCompletions: HabitCompletion[];
+
+  // @ManyToOne(() => User, (user) => user.habits)
+  // user: User;
 }

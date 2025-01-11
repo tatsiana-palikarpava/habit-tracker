@@ -44,6 +44,7 @@ export class HabitsService {
         throw new BadRequestException(HABIT_ERRORS.ALREADY_COMPLETED);
       }
     }
+    // !! unsafe
     // await this.habitCompletionsRepository.save({ habitId: id });
     // await this.habitsRepository.update({ id }, { completionsCount: habit.completionsCount + 1 });
     await this.habitsRepository.manager.transaction(
