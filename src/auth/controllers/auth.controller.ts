@@ -6,9 +6,9 @@ import {
   SignUpDto,
 } from '../dto/auth.controller.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from 'src/guards/auth.guard';
 import { AuthUser } from '../decorators/auth-user.decorator';
 import { AuthUserType } from '../types/auth-user.type';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -25,9 +25,10 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@AuthUser() user: AuthUserType) {
-    return new GetMeResponseDTO(await this.authService.getMe(user.sub));
+    console.log(user);
+    return new GetMeResponseDTO(await this.authService.getMe(user.userId));
   }
 }
