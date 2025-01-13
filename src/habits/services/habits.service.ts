@@ -81,6 +81,6 @@ export class HabitsService {
 
   async remove(id: number): Promise<void> {
     await this.findOneOrFail(id);
-    this.habitsRepository.delete({ id });
+    await this.habitsRepository.delete({ id });
   }
 }
