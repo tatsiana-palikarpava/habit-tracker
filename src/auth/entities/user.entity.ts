@@ -17,6 +17,9 @@ export class User {
   email: string;
 
   @Column()
+  normalizedEmail: string;
+
+  @Column()
   password: string;
 
   @Column()
@@ -28,6 +31,6 @@ export class User {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  // @OneToMany(() => Habit, (habit) => habit.user)
-  // habits: Habit[];
+  @OneToMany(() => Habit, (habit) => habit.user)
+  habits: Habit[];
 }

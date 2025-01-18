@@ -48,6 +48,9 @@ export class GetMeResponseDTO extends User {
   email: string;
 
   @Exclude()
+  normalizedEmail: string;
+
+  @Exclude()
   password: string;
 
   @Exclude()

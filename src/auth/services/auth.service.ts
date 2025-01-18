@@ -11,7 +11,7 @@ import { compare, hash } from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { SignInDto, SignUpDto } from '../dto/auth.controller.dto';
 import { JwtService } from '@nestjs/jwt';
-import { NotFoundError } from 'rxjs';
+const normalizeEmail = require('normalize-email');
 
 @Injectable()
 export class AuthService {
@@ -21,9 +21,9 @@ export class AuthService {
   ) {}
 
   async signUp(body: SignUpDto): Promise<{ accessToken: string }> {
-    // mind normalization
+    const normalizedEmail = normalizeEmail(body.email);
     const existingUser = await this.usersRepository.findOneBy({
-      email: body.email,
+      normalizedEmail,
     });
     if (existingUser) {
       throw new BadRequestException(AUTH_ERRORS.EMAIL_ALREADY_EXISTS);
@@ -32,6 +32,7 @@ export class AuthService {
     const user = await this.usersRepository.save({
       fullName: body.fullName,
       email: body.email,
+      normalizedEmail,
       password: hashedPassword,
     });
     const accessToken = await this.jwtService.signAsync({
@@ -44,8 +45,9 @@ export class AuthService {
   }
 
   async signIn(body: SignInDto): Promise<{ accessToken: string }> {
+    const normalizedEmail = normalizeEmail(body.email);
     const existingUser = await this.usersRepository.findOneBy({
-      email: body.email,
+      normalizedEmail,
     });
     if (!existingUser) {
       throw new NotFoundException(AUTH_ERRORS.INVALID_CREDENTIALS);

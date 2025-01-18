@@ -19,7 +19,6 @@ import { JwtModule } from '@nestjs/jwt';
       type: 'postgres',
       ...configuration().database,
       // entities: [Habit],
-      logging: true,
       autoLoadEntities: true,
       synchronize: true, // unsafe
     }),
