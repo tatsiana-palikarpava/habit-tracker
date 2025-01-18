@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+const normalizeEmail = require('normalize-email');
 import { InjectRepository } from '@nestjs/typeorm';
 import { AUTH_ERRORS } from '../constants';
 import { Repository } from 'typeorm';
@@ -11,7 +12,6 @@ import { compare, hash } from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { SignInDto, SignUpDto } from '../dto/auth.controller.dto';
 import { JwtService } from '@nestjs/jwt';
-const normalizeEmail = require('normalize-email');
 
 @Injectable()
 export class AuthService {
@@ -52,10 +52,7 @@ export class AuthService {
     if (!existingUser) {
       throw new NotFoundException(AUTH_ERRORS.INVALID_CREDENTIALS);
     }
-    const isValid = await compare(body.password, existingUser.password);
-    if (!isValid) {
-      throw new UnauthorizedException(AUTH_ERRORS.INVALID_CREDENTIALS);
-    }
+    await this.verifyPassword(existingUser, body.password);
     const accessToken = await this.jwtService.signAsync({
       sub: existingUser.id,
       name: existingUser.fullName,
@@ -71,5 +68,12 @@ export class AuthService {
       throw new NotFoundException(AUTH_ERRORS.USER_NOT_FOUND);
     }
     return user;
+  }
+
+  async verifyPassword(user: User, password: string) {
+    const isValid = await compare(password, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException(AUTH_ERRORS.INVALID_CREDENTIALS);
+    }
   }
 }

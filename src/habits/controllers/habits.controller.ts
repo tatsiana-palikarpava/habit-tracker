@@ -13,12 +13,12 @@ import {
 import { HabitsService } from '../services/habits.service';
 import { CreateHabitDto, GetAllHabitsQueryDto, UpdateHabitDto } from '../dto';
 import { CreateHabitResponseDto } from '../dto/create-habit-response.dto';
-import { AuthGuard } from 'src/guards/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthUser, AuthUserType } from 'src/auth';
+import { JwtAuthGuard } from 'src/auth';
 
 @Controller('habits')
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class HabitsController {
   constructor(private readonly habitsService: HabitsService) {}
@@ -26,7 +26,7 @@ export class HabitsController {
   @Post()
   async create(@Body() body: CreateHabitDto, @AuthUser() user: AuthUserType) {
     return new CreateHabitResponseDto(
-      await this.habitsService.create(body, user.sub),
+      await this.habitsService.create(body, user.userId),
     );
   }
 
@@ -35,7 +35,7 @@ export class HabitsController {
     @Param('id', ParseIntPipe) id: number,
     @AuthUser() user: AuthUserType,
   ) {
-    return this.habitsService.trackHabitCompletion(id, user.sub);
+    return this.habitsService.trackHabitCompletion(id, user.userId);
   }
 
   @Get('all')
@@ -43,12 +43,12 @@ export class HabitsController {
     @Query() query: GetAllHabitsQueryDto,
     @AuthUser() user: AuthUserType,
   ) {
-    return this.habitsService.findAll(query, user.sub);
+    return this.habitsService.findAll(query, user.userId);
   }
 
   @Get('stats')
   getStatistics(@AuthUser() user: AuthUserType) {
-    return this.habitsService.getStatistics(user.sub);
+    return this.habitsService.getStatistics(user.userId);
   }
 
   @Get(':id')
@@ -56,7 +56,7 @@ export class HabitsController {
     @Param('id', ParseIntPipe) id: number,
     @AuthUser() user: AuthUserType,
   ) {
-    return this.habitsService.findOneOrFail(id, user.sub);
+    return this.habitsService.findOneOrFail(id, user.userId);
   }
 
   @Patch(':id')
@@ -65,7 +65,7 @@ export class HabitsController {
     @Body() body: UpdateHabitDto,
     @AuthUser() user: AuthUserType,
   ) {
-    return this.habitsService.update(id, body, user.sub);
+    return this.habitsService.update(id, body, user.userId);
   }
 
   @Delete(':id')
@@ -73,6 +73,6 @@ export class HabitsController {
     @Param('id', ParseIntPipe) id: number,
     @AuthUser() user: AuthUserType,
   ) {
-    return this.habitsService.remove(id, user.sub);
+    return this.habitsService.remove(id, user.userId);
   }
 }

@@ -30,6 +30,9 @@ export class Habit {
   @Column({ default: 0 })
   completionsCount: number;
 
+  @Column({ default: false })
+  isNotificationSent: boolean;
+
   @Column()
   userId: number;
 

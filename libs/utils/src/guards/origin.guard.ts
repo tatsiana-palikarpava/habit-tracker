@@ -12,7 +12,6 @@ export class OriginGuard implements CanActivate {
     const req: Request = ctx.getRequest();
     const allowedOrigins = this.reflector.get(Origin, context.getHandler());
     // const allowedOrigins = this.reflector.get('origins', context.getHandler());
-    console.log(allowedOrigins);
     return allowedOrigins.includes(req.hostname);
   }
 }

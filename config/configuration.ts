@@ -9,5 +9,9 @@ export default () => ({
   auth: {
     jwtSecret: process.env.JWT_SECRET,
     accessTokenExpires: process.env.ACCESS_TOKEN_EXPIRES,
+  },
+  email: {
+    sender: process.env.EMAIL_SENDER,
+    password: process.env.EMAIL_SENDER_PASS,
   }
 });

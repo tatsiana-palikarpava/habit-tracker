@@ -57,7 +57,10 @@ export class HabitsService {
         await habitCompletionsRepository.save({ habitId: id });
         await habitsRepository.update(
           { id },
-          { completionsCount: habit.completionsCount + 1 },
+          {
+            completionsCount: habit.completionsCount + 1,
+            isNotificationSent: false,
+          },
         );
       },
     );
