@@ -6,74 +6,73 @@ import {
   Patch,
   Param,
   Delete,
-  UseFilters,
+  ParseIntPipe,
+  Query,
   UseGuards,
-  SetMetadata,
-  ParseUUIDPipe,
-  HttpStatus,
-  UsePipes,
-  UseInterceptors,
-  ClassSerializerInterceptor,
-  HttpException,
 } from '@nestjs/common';
 import { HabitsService } from '../services/habits.service';
-import { CreateHabitDto, UpdateHabitDto } from '../dto';
-import { UUID } from 'crypto';
-import { HttpExceptionFilter, Origin } from '@libs/utils';
-import { OriginGuard } from '@libs/utils';
-import { ToUpperCasePipe } from '@libs/utils/pipes/to-upper-case.pipe';
-import { ZodValidationPipe } from '@libs/utils/pipes/zod-validation.pipe';
-import { createHabitSchema } from '../schemas';
-import { LoggingInterceptor } from '@libs/utils';
-import { ALLOWED_ORIGINS } from '../constants';
+import { CreateHabitDto, GetAllHabitsQueryDto, UpdateHabitDto } from '../dto';
 import { CreateHabitResponseDto } from '../dto/create-habit-response.dto';
-import { plainToInstance } from 'class-transformer';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { AuthUser, AuthUserType } from 'src/auth';
+import { JwtAuthGuard } from 'src/auth';
 
 @Controller('habits')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class HabitsController {
   constructor(private readonly habitsService: HabitsService) {}
 
   @Post()
-  @UseInterceptors(LoggingInterceptor)
-  @UseInterceptors(ClassSerializerInterceptor)
-  // @UsePipes(new ZodValidationPipe(createHabitSchema))
-  create(
-    @Body(new ToUpperCasePipe('title')) createHabitDto: CreateHabitDto,
-  ): CreateHabitResponseDto {
+  async create(@Body() body: CreateHabitDto, @AuthUser() user: AuthUserType) {
     return new CreateHabitResponseDto(
-      this.habitsService.create(createHabitDto),
+      await this.habitsService.create(body, user.userId),
     );
   }
 
+  @Post(':id/complete')
+  trackHabitCompletion(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthUser() user: AuthUserType,
+  ) {
+    return this.habitsService.trackHabitCompletion(id, user.userId);
+  }
+
   @Get('all')
-  @UseFilters(new HttpExceptionFilter())
-  // @SetMetadata('origins', ALLOWED_ORIGINS)
-  @UseGuards(OriginGuard)
-  @Origin(ALLOWED_ORIGINS)
-  findAll() {
-    return this.habitsService.findAll();
+  findAll(
+    @Query() query: GetAllHabitsQueryDto,
+    @AuthUser() user: AuthUserType,
+  ) {
+    return this.habitsService.findAll(query, user.userId);
+  }
+
+  @Get('stats')
+  getStatistics(@AuthUser() user: AuthUserType) {
+    return this.habitsService.getStatistics(user.userId);
   }
 
   @Get(':id')
   findOne(
-    @Param(
-      'id',
-      new ParseUUIDPipe({
-        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      }),
-    )
-    id: UUID,
+    @Param('id', ParseIntPipe) id: number,
+    @AuthUser() user: AuthUserType,
   ) {
-    return this.habitsService.findOne(id);
+    return this.habitsService.findOneOrFail(id, user.userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: UUID, @Body() updateHabitDto: UpdateHabitDto) {
-    return this.habitsService.update(id, updateHabitDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateHabitDto,
+    @AuthUser() user: AuthUserType,
+  ) {
+    return this.habitsService.update(id, body, user.userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: UUID) {
-    return this.habitsService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthUser() user: AuthUserType,
+  ) {
+    return this.habitsService.remove(id, user.userId);
   }
 }
